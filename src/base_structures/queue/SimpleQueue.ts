@@ -1,4 +1,4 @@
-import {ILinkedList, LinkedList, ILinkedListItem} from "../linked-list";
+import {ILinkedList, LinkedList} from "../linked-list";
 import {ISimpleQueue} from "./interfaces";
 
 export default class SimpleQueue<T = unknown> implements ISimpleQueue<T> {
@@ -20,7 +20,7 @@ export default class SimpleQueue<T = unknown> implements ISimpleQueue<T> {
         if (this.isEmpty()) {
             throw new Error('Queue is empty');
         }
-        const first = <ILinkedListItem<T>>this.queue.first;
+        const first = this.queue.first!;
         const val = first.value;
         this.queue.delete(first);
         return val;
