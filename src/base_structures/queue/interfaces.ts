@@ -1,13 +1,13 @@
-export interface ISimpleQueue<T> {
+export interface SimpleQueue<T> {
     get head(): T | null;
-    get values(): Iterable<T>;
+    values(): IterableIterator<T>;
 
     push(value: T): void;
     shift(): T;
     isEmpty(): boolean;
 }
 
-export interface IDoubleQueue<T> extends ISimpleQueue<T>{
+export interface DoubleQueue<T> extends SimpleQueue<T>{
     get back(): T | null;
 
     pop(): T;

@@ -1,8 +1,7 @@
-import {ILinkedListItem} from "../linked-list";
-import {IDoubleQueue} from "./interfaces";
-import {SimpleQueue} from "./index";
+import {DoubleQueue as AbstractDoubleQueue} from "./interfaces";
+import {SimpleQueue} from "./";
 
-export default class DoubleQueue<T = unknown> extends SimpleQueue<T> implements IDoubleQueue<T> {
+export default class DoubleQueue<T = unknown> extends SimpleQueue<T> implements AbstractDoubleQueue<T> {
     constructor() {
         super();
     }
@@ -15,7 +14,7 @@ export default class DoubleQueue<T = unknown> extends SimpleQueue<T> implements 
         if (this.isEmpty()) {
             this.queue.add(value);
         } else {
-            this.queue.insertBefore(value, <ILinkedListItem<T>>this.queue.first);
+            this.queue.insertBefore(value, this.queue.first!);
         }
     }
 
@@ -23,7 +22,7 @@ export default class DoubleQueue<T = unknown> extends SimpleQueue<T> implements 
         if (this.isEmpty()) {
             throw new Error('Queue is empty');
         }
-        const last = <ILinkedListItem<T>>this.queue.last;
+        const last = this.queue.last!;
         const val = last.value;
         this.queue.delete(last);
         return val;
