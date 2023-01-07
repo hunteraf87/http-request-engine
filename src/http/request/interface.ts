@@ -1,14 +1,6 @@
 import {HttpRequestEngine} from "../request-engins";
 import {CacheEngine} from "@cache";
 
-export type RequestOptions = {
-    engine?: HttpRequestEngine,
-    cache?: CacheEngine,
-    method?: RequestMethod,
-    body?: RequestBody,
-    headers?: Headers,
-}
-
 export enum RequestMethod {
     GET = 'get',
     POST = 'post',
@@ -27,14 +19,10 @@ export type RequestParameters = {
     headers: Headers
 }
 
-export interface HttpRequest {
-    readonly url: string;
-    using(engine: HttpRequestEngine): this;
-    cache(engine: CacheEngine): this;
-    method(method: RequestMethod): this;
-    body(body: RequestBody): this;
-    header(key: string, value: string): this;
-    headers(headers: Headers): this;
-    create(): Promise<Response>;
-    parameters(): RequestParameters;
+export type RequestSettings = {
+    engine: HttpRequestEngine
+    cache: CacheEngine
+    method: RequestMethod
+    body: RequestBody
+    headers: Headers
 }

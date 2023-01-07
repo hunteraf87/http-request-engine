@@ -1,97 +1,100 @@
 import {Fetch, HttpRequestEngine} from "../request-engins";
 import {CacheEngine, NeverCache} from "@cache";
-import {HttpRequest, RequestBody, RequestMethod, RequestOptions, RequestParameters} from "./interface";
+import {RequestBody, RequestMethod, RequestParameters, RequestSettings} from "./interface";
 import {objectToFormData} from "./helpers";
 
-export default class Request implements HttpRequest {
-    readonly url: string
-    #engine: HttpRequestEngine
-    #cache: CacheEngine
-    #method: RequestMethod
-    #body: RequestBody
-    #headers: Headers
+export default class Request {
+    protected static settings: RequestSettings = {
+        engine: new Fetch(),
+        cache: new NeverCache(),
+        method: RequestMethod.GET,
+        body: {},
+        headers: new Headers()
+    };
 
-    constructor(url: string, opts: RequestOptions = {}) {
-        this.url = url;
-        this.#engine = opts.engine !== undefined ? opts.engine : new Fetch();
-        this.#cache = opts.cache !== undefined ? opts.cache : new NeverCache();
-        this.#method = opts.method !== undefined ? opts.method : RequestMethod.GET;
-        this.#body = opts.body !== undefined ? opts.body : {};
-        this.#headers = opts.headers !== undefined ? opts.headers : new Headers();
+    static using(engine: HttpRequestEngine): typeof Request {
+        const settings = { ...this.settings, engine };
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    parameters(): RequestParameters {
-        return {
-            method: this.#method,
-            body: this.#prepareBody(),
-            headers: this.#headers
-        }
+    static cache(engine: CacheEngine): typeof Request {
+        const settings = { ...this.settings, cache: engine };
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    using(engine: HttpRequestEngine): this {
-        this.#engine = engine;
-        return this;
+    static method(method: RequestMethod): typeof Request {
+        const settings = { ...this.settings, method };
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    cache(engine: CacheEngine): this {
-        this.#cache = engine;
-        return this;
+    static header(key: string, value: string): typeof Request {
+        const settings = this.settings;
+        settings.headers.set(key, value);
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    method(method: RequestMethod): this {
-        this.#method = method;
-        return this;
+    static headers(headers: Headers): typeof Request {
+        const settings = { ...this.settings, headers };
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    body(body: RequestBody): this {
-        this.#body = body;
-        return this;
+    static json(): typeof Request {
+        const settings = this.settings;
+        settings.headers.set('Content-Type', 'application/json');
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    header(key: string, value: string): this {
-        this.#headers.set(key, value)
-        return this;
+    static formData(): typeof Request {
+        const settings = this.settings;
+        settings.headers.set('Content-Type', 'multipart/form-data');
+        return class extends this {
+            protected static settings = settings
+        };
     }
 
-    headers(headers: Headers): this {
-        this.#headers = headers;
-        return this;
-    }
-
-    json(): this {
-        this.#headers.set('Content-Type', 'application/json');
-        return this;
-    }
-
-    formData(): this {
-        this.#headers.set('Content-Type', 'multipart/form-data');
-        return this;
-    }
-
-    create(): Promise<Response> {
-        if (this.#method.toLowerCase() === 'get') {
-            const cacheValue = this.#cache.get(this.url);
-            // @ts-ignore
-            // console.log('cache', this.#cache.print())
+    static create(url: string, body?: RequestBody): Promise<Response> {
+        if (this.settings.method.toLowerCase() === 'get') {
+            const cacheValue = this.settings.cache.get(url);
             if (cacheValue !== undefined) {
                 return Promise.resolve(cacheValue);
             }
         }
-        return this.#engine.execute(this).then((response) => {
-            if (this.#method.toLowerCase() === 'get') {
-                this.#cache.set(this.url, response);
+
+        return this.settings.engine.execute(url, this.prepareParameters(body)).then((response) => {
+            if (this.settings.method.toLowerCase() === 'get') {
+                this.settings.cache.set(url, response);
             }
             return response;
         });
     }
 
-    #prepareBody() {
-        if (this.#headers['Content-Type'] === 'application/json') {
-            return JSON.stringify(this.#body);
-        } else if (this.#headers['Content-Type'] === 'multipart/form-data') {
-            return objectToFormData(this.#body);
-        } else if (this.#body instanceof File) {
-            return this.#body;
+    static prepareParameters(body?: RequestBody): RequestParameters {
+        return {
+            method: this.settings.method,
+            body: body ? this.prepareBody(body) : null,
+            headers: this.settings.headers
+        }
+    }
+
+    static prepareBody(body: RequestBody) {
+        if (this.settings.headers['Content-Type'] === 'application/json') {
+            return JSON.stringify(body);
+        } else if (this.settings.headers['Content-Type'] === 'multipart/form-data') {
+            return objectToFormData(body);
+        } else if (body instanceof File) {
+            return body;
         }
         return null;
     }

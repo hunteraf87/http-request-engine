@@ -1,5 +1,5 @@
-import {HttpRequest} from "../request";
+import {RequestParameters} from "../request/interface";
 
 export interface HttpRequestEngine {
-    execute(request: HttpRequest): Promise<any>
+    execute(url: string, parameters: RequestParameters): Promise<any>
 }

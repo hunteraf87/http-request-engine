@@ -1,10 +1,8 @@
 import {HttpRequestEngine} from "./interface";
-import {HttpRequest} from "../request";
+import {RequestParameters} from "../request/interface";
 
 export default class XHR implements HttpRequestEngine {
-    execute(request: HttpRequest): Promise<any> {
-        const params = request.parameters();
-
+    execute(url: string, parameters: RequestParameters): Promise<any> {
         const headers = (xhr: XMLHttpRequest): Headers => {
             return xhr
                 .getAllResponseHeaders()
@@ -21,9 +19,9 @@ export default class XHR implements HttpRequestEngine {
         return new Promise((resolve, reject) => {
 
             let xhr = new XMLHttpRequest();
-            xhr.open(params.method, request.url, true);
+            xhr.open(parameters.method, url, true);
 
-            params.headers.forEach((value, key) => {
+            parameters.headers.forEach((value, key) => {
                 xhr.setRequestHeader(key, value);
             })
 
@@ -37,7 +35,7 @@ export default class XHR implements HttpRequestEngine {
 
             xhr.onerror = () => reject(new Error('Error send XHR request.'))
 
-            xhr.send(params.body);
+            xhr.send(parameters.body);
         })
     }
 }

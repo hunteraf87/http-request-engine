@@ -1,13 +1,12 @@
 import {HttpRequestEngine} from "./interface";
-import {HttpRequest} from "../request";
+import {RequestParameters} from "../request/interface";
 
 export default class Fetch implements HttpRequestEngine {
-    execute(request: HttpRequest): Promise<any> {
-        const params = request.parameters();
-        return fetch(request.url, {
-            method: params.method,
-            body: params.body,
-            headers: params.headers
+    execute(url: string, parameters: RequestParameters): Promise<any> {
+        return fetch(url, {
+            method: parameters.method,
+            body: parameters.body,
+            headers: parameters.headers
         });
     }
 }
